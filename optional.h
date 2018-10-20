@@ -7,25 +7,25 @@
 
 #include <algorithm>
 #include <cassert>
-
 template <typename T>
 struct optional {
 public:
-    optional() : is_none(true) {}
+    optional() : is_empty(true) {}
 
-    optional(T const &a) : is_none(false) {
+    optional(T const &a) : is_empty(false) {
         new(&data) T(a);
     }
 
-    optional(optional const& other) : is_none(other.is_none)  {
-        if (!is_none) {
+    optional(optional const& other) : is_empty(other.is_empty)  {
+        if (!is_empty) {
             new(&data) T(*other);
         }
     }
 
     ~optional() {
-        if (!is_none) {
+        if (!is_empty) {
             (*this)->T::~T();
+            is_empty = true;
         }
     }
 
@@ -37,58 +37,58 @@ public:
 
     void swap(optional& other)
     {
-        if (!is_none)
+        if (!is_empty)
         {
-            if (!other.is_none)
+            if (!other.is_empty)
             {
                 std::swap(**this, *other);
             }
             else
             {
-                new (&other.data) T(**this);
+                new(&other.data) T(**this);
                 get_ptr()->T::~T();
-                std::swap(is_none, other.is_none);
+                std::swap(is_empty, other.is_empty);
             }
         }
         else
         {
-            if (!other.is_none)
+            if (!other.is_empty)
             {
-                new (&data) T(*other);
+                new(&data) T(*other);
                 other.get_ptr()->T::~T();
-                std::swap(is_none, other.is_none);
+                std::swap(is_empty, other.is_empty);
             }
         }
     }
 
     void clear() {
-        if (!is_none) {
+        if (!is_empty) {
             (*this)->T::~T();
         }
-        is_none = true;
+        is_empty = true;
     }
 
     explicit operator bool() const {
-        return !is_none;
+        return !is_empty;
     }
 
     T& operator*() {
-        //assert(!is_none);
+        //assert(!is_empty);
         return *get_ptr();
     }
 
     T const& operator*() const {
-        //assert(!is_none);
+        //assert(!is_empty);
         return *get_ptr();
     }
 
     T* operator->() {
-        //assert(!is_none);
+        //assert(!is_empty);
         return get_ptr();
     }
 
     T const operator->() const {
-        //assert(!is_none);
+        //assert(!is_empty);
         return get_ptr();
     }
 
@@ -96,22 +96,22 @@ public:
     friend void swap(optional<V>& a, optional<V>& b);
 private:
     typename std::aligned_storage<sizeof(T), alignof(T)>::type data;
-    bool is_none;
+    bool is_empty;
 
     T* get_ptr() {
-        return &reinterpret_cast<T&>(data);
+        return reinterpret_cast<T*>(&data);
     }
 
     T const* get_ptr() const {
-        return &reinterpret_cast<T const&>(data);
+        return reinterpret_cast<T const*>(&data);
     }
 
     friend bool operator==(optional const& a, optional const& b) {
-        if (a.is_none != b.is_none) {
+        if (a.is_empty != b.is_empty) {
             return false;
         }
 
-        if (a.is_none) {
+        if (a.is_empty) {
             return true;
         }
 
