@@ -23,42 +23,24 @@ public:
     }
 
     ~optional() {
-        if (!is_empty) {
-            (*this)->T::~T();
-            is_empty = true;
-        }
+        clear();
     }
 
     optional& operator=(optional const& other) {
-        optional tmp = other;
-        swap(tmp);
+        if (this == &other) { return *this; }
+        clear();
+        if (!other.is_empty) {
+            new (&data) T(*other);
+        }
+        is_empty = other.is_empty;
         return *this;
     }
 
     void swap(optional& other)
     {
-        if (!is_empty)
-        {
-            if (!other.is_empty)
-            {
-                std::swap(**this, *other);
-            }
-            else
-            {
-                new(&other.data) T(**this);
-                get_ptr()->T::~T();
-                std::swap(is_empty, other.is_empty);
-            }
-        }
-        else
-        {
-            if (!other.is_empty)
-            {
-                new(&data) T(*other);
-                other.get_ptr()->T::~T();
-                std::swap(is_empty, other.is_empty);
-            }
-        }
+        optional temp = other;
+        other = *this;
+        *this = temp;
     }
 
     void clear() {
