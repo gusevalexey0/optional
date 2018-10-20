@@ -30,7 +30,7 @@ public:
         if (this == &other) { return *this; }
         clear();
         if (!other.is_empty) {
-            new (&data) T(*other);
+            new(&data) T(*other);
         }
         is_empty = other.is_empty;
         return *this;
@@ -93,7 +93,7 @@ private:
             return false;
         }
 
-        if (a.is_empty) {
+        if (a.is_empty && b.is_empty) {
             return true;
         }
 
