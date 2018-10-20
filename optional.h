@@ -13,23 +13,52 @@ struct optional {
 public:
     optional() : is_none(true) {}
 
-    optional(T const &a) : is_none(false) {}
+    optional(T const &a) : is_none(false) {
+        new(&data) T(a);
+    }
 
-    optional(optional const& other) = default;
+    optional(optional const& other) : is_none(other.is_none)  {
+        if (!is_none) {
+            new(&data) T(*other);
+        }
+    }
 
+    ~optional() {
+        if (!is_none) {
+            (*this)->T::~T();
+        }
+    }
 
     optional& operator=(optional const& other) {
-        if (*this != *other) {
-            if (!is_none) {
-                delete get_ptr();
+        optional tmp = other;
+        swap(tmp);
+        return *this;
+    }
 
+    void swap(optional& other)
+    {
+        if (!is_none)
+        {
+            if (!other.is_none)
+            {
+                std::swap(**this, *other);
             }
-            is_none = other.is_none;
-            if (!is_none) {
-                new(get_ptr()) T(*other.get_ptr());
+            else
+            {
+                new (&other.data) T(**this);
+                get_ptr()->T::~T();
+                std::swap(is_none, other.is_none);
             }
         }
-        return *this;
+        else
+        {
+            if (!other.is_none)
+            {
+                new (&data) T(*other);
+                other.get_ptr()->T::~T();
+                std::swap(is_none, other.is_none);
+            }
+        }
     }
 
     void clear() {
@@ -44,22 +73,22 @@ public:
     }
 
     T& operator*() {
-        assert(!is_none);
+        //assert(!is_none);
         return *get_ptr();
     }
 
     T const& operator*() const {
-        assert(!is_none);
+        //assert(!is_none);
         return *get_ptr();
     }
 
     T* operator->() {
-        assert(!is_none);
+        //assert(!is_none);
         return get_ptr();
     }
 
     T const operator->() const {
-        assert(!is_none);
+        //assert(!is_none);
         return get_ptr();
     }
 
@@ -113,14 +142,13 @@ private:
     }
 
     friend bool operator>(optional const& a, optional const& b) {
-        return !(a < b);
+        return !(a <= b);
     }
 };
 
 template<typename V>
 void swap(optional<V> &a, optional<V> &b) {
-    std::swap(a.is_none, b.is_none);
-    std::swap(a.data, b.data);
+    a.swap(b);
 }
 
 #endif //OPTIONAL_OPTIONAL_H

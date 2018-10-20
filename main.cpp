@@ -3,5 +3,4 @@
 #include "counted.h"
 
 int main() {
-    optional<counted> opt;
 }
