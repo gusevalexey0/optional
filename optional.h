@@ -13,7 +13,7 @@ struct optional {
 public:
     optional() : is_none(true) {}
 
-    optional(T const &a) : is_none(false), data(a) {}
+    optional(T const &a) : is_none(false) {}
 
     optional(optional const& other) = default;
 
@@ -66,7 +66,7 @@ public:
     template<typename V>
     friend void swap(optional<V>& a, optional<V>& b);
 private:
-    T data;
+    typename std::aligned_storage<sizeof(T), alignof(T)>::type data;
     bool is_none;
 
     T* get_ptr() {
